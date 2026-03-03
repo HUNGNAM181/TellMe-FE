@@ -4,6 +4,8 @@ export interface Conversation {
   firstName: string;
   lastName: string;
   avatarUrl: string;
+  lastMessageIsReply: boolean;
+  lastMessageText: string;
   totalMessages: number;
   lastInteractionAt: string;
 }
@@ -11,6 +13,7 @@ export interface Conversation {
 export interface Message {
   id: string;
   senderPsid: string;
+  recipientId?: string;
   text: string;
   isReply: boolean;
   createdAt: string;
@@ -31,7 +34,13 @@ export interface ConversationsResponse {
   };
 }
 
+export interface Customer {
+  psid: string;
+  name: string;
+  avatarUrl: string;
+}
 export interface HistoryResponse {
+  customer: Customer;
   data: Message[];
   meta: {
     page: number;
