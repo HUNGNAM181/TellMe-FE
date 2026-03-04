@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Smile, Image as ImageIcon, Sticker } from "lucide-react";
+import { Send, Smile, Image as ImageIcon, Sticker, X } from "lucide-react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { chatService } from "../../services/chat.service";
 
+import { Message } from "../../types/chat.types";
+
 interface ChatInputProps {
   psid: string;
+  replyingTo?: Message | null;
+  onCancelReply?: () => void;
 }
 
-function ChatInputComponent({ psid }: ChatInputProps) {
+function ChatInputComponent({ psid, replyingTo, onCancelReply }: ChatInputProps) {
   const [inputText, setInputText] = useState("");
   const [sending, setSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -15,7 +19,6 @@ function ChatInputComponent({ psid }: ChatInputProps) {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -49,7 +52,13 @@ function ChatInputComponent({ psid }: ChatInputProps) {
         textareaRef.current.style.height = "auto";
       }
 
-      await chatService.sendMessage({ psid, text: textToSend });
+      await chatService.sendMessage({
+        psid,
+        text: textToSend,
+        ...(replyingTo ? { replyToId: replyingTo.id } : {}),
+      });
+
+      if (onCancelReply) onCancelReply();
     } catch (error) {
       console.error("Lỗi khi gửi tin nhắn:", error);
       alert("Lỗi khi gửi tin nhắn, vui lòng thử lại.");
@@ -88,6 +97,20 @@ function ChatInputComponent({ psid }: ChatInputProps) {
           </div>
         )}
       </div>
+
+      {replyingTo && (
+        <div className="flex items-center justify-between mb-2 px-4 py-2 bg-gray-50 border-l-4 border-blue-500 rounded-lg shadow-sm">
+          <div className="flex-1 overflow-hidden">
+            <p className="text-xs font-semibold text-blue-600 mb-0.5">
+              Đang trả lời {replyingTo.isReply ? "chính bạn" : "khách hàng"}
+            </p>
+            <p className="text-sm text-gray-500 truncate">{replyingTo.text}</p>
+          </div>
+          {onCancelReply && (
+            <X className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer" onClick={onCancelReply} />
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSendMessage} className="flex items-end gap-2">
         <div className="flex items-center gap-1 mb-1.5 pl-1">

@@ -17,11 +17,15 @@ export interface Message {
   text: string;
   isReply: boolean;
   createdAt: string;
+  replyToId: string | null;
+  forwardedMessageId: string | null;
 }
 
 export interface SendMessagePayload {
   psid: string;
   text: string;
+  replyToId?: string;
+  forwardedMessageId?: string;
 }
 
 export interface ConversationsResponse {

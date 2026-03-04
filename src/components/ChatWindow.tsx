@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback, Fragment } from "react";
-import { MessageCircle, User } from "lucide-react";
+import { MessageCircle, User, ArrowLeft } from "lucide-react";
 import { chatService } from "../services/chat.service";
 import { webSocketService } from "../services/webSocket.service";
 import { Customer, Message } from "../types/chat.types";
@@ -9,16 +9,23 @@ import { ChatInput } from "./chat/ChatInput";
 import { MessageBubble } from "./chat/MessageBubble";
 import { formatDateSeparator } from "@/lib/utils";
 import Image from "next/image";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 
 interface ChatWindowProps {
   psid: string | null;
 }
 
 export function ChatWindow({ psid }: ChatWindowProps) {
+  const params = useParams();
+  const platform = (params?.platform as string) || "facebook";
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [timeVisibleInfo, setTimeVisibleInfo] = useState<string | null>(null);
 
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -93,6 +100,7 @@ export function ChatWindow({ psid }: ChatWindowProps) {
       setMessages([]);
       setPage(1);
       setHasMore(true);
+      setReplyingTo(null);
       prevScrollHeightRef.current = null;
       return;
     }
@@ -149,6 +157,10 @@ export function ChatWindow({ psid }: ChatWindowProps) {
     <div className="flex flex-col h-full bg-white relative">
       <div className="p-4 border-b border-gray-200 bg-white shadow-sm flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
+          <Link href={`/${platform}`} className="md:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+
           <div className="relative w-12 h-12 shrink-0">
             {customer?.avatarUrl ? (
               <Image
@@ -211,7 +223,13 @@ export function ChatWindow({ psid }: ChatWindowProps) {
                     </span>
                   </div>
                 )}
-                <MessageBubble msg={msg} />
+                <MessageBubble
+                  msg={msg}
+                  messages={messages}
+                  onReply={() => setReplyingTo(msg)}
+                  showTimeInfo={timeVisibleInfo === msg.id}
+                  onToggleTime={() => setTimeVisibleInfo((prev: string | null) => (prev === msg.id ? null : msg.id))}
+                />
               </Fragment>
             );
           })
@@ -219,7 +237,7 @@ export function ChatWindow({ psid }: ChatWindowProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      <ChatInput psid={psid} />
+      <ChatInput psid={psid} replyingTo={replyingTo} onCancelReply={() => setReplyingTo(null)} />
     </div>
   );
 }
