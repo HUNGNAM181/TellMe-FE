@@ -4,9 +4,12 @@ import { AuthUser } from "@/types/auth.types";
 interface AuthState {
   user: AuthUser | null;
   token: string | null;
+  refreshToken: string | null;
   permissions: string[];
   isAuthenticated: boolean;
-  setAuth: (user: AuthUser, token: string, permissions: string[]) => void;
+
+  setAuth: (user: AuthUser, token: string, refreshToken: string, permissions: string[]) => void;
+
   clearAuth: () => void;
   setUser: (user: AuthUser) => void;
 }
@@ -14,22 +17,30 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
+  refreshToken: null,
   permissions: [],
   isAuthenticated: false,
-  setAuth: (user, token, permissions) =>
+
+  setAuth: (user, token, refreshToken, permissions) =>
     set({
       user,
       token,
+      refreshToken,
       permissions,
       isAuthenticated: true,
     }),
+
   clearAuth: () =>
     set({
       user: null,
       token: null,
+      refreshToken: null,
       permissions: [],
       isAuthenticated: false,
     }),
 
-  setUser: (user) => set({ user }),
+  setUser: (user) =>
+    set({
+      user,
+    }),
 }));

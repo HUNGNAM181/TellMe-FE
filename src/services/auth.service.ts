@@ -1,70 +1,79 @@
-// import apiClient from "@/lib/axios.client";
-// import { LoginRequest, LoginResponse, AuthUser } from "@/types/auth.types";
-// import { useAuthStore } from "@/store/auth.store";
+import apiClient from "@/lib/axios.client";
+import { LoginRequest, AuthUser, AuthResponseData } from "@/types/auth.types";
+import { ApiResponse } from "@/types/api.types";
+import { useAuthStore } from "@/store/auth.store";
 
-// let currentUserPromise: Promise<AuthUser | null> | null = null;
+let currentUserPromise: Promise<AuthUser | null> | null = null;
 
-// export const authService = {
-//   async login(data: LoginRequest): Promise<LoginResponse> {
-//     const response = await apiClient.post<LoginResponse>("/Users/login", data);
-//     const result = response.data;
+export const authService = {
+  async login(data: LoginRequest): Promise<AuthResponseData> {
+    const result = (await apiClient.post("/Users/login", data)) as unknown as ApiResponse<AuthResponseData>;
 
-//     if (result.isSuccess && result.data) {
-//       const { user, token, permissions } = result.data;
+    if (result.isSuccess && result.data) {
+      const { user, token, refreshToken, permissions } = result.data;
 
-//       useAuthStore.getState().setAuth(user, token, permissions);
-//       localStorage.setItem("logged_in", "true");
-//     }
+      useAuthStore.getState().setAuth(user, token, refreshToken, permissions);
+      localStorage.setItem("logged_in", "true");
 
-//     return result;
-//   },
+      return result.data;
+    }
 
-//   async refresh() {
-//     const response = await apiClient.post("/Users/refresh");
-//     return response.data;
-//   },
+    throw new Error(result.errorMessage || "Login failed");
+  },
 
-//   async getCurrentUser(): Promise<AuthUser | null> {
-//     const store = useAuthStore.getState();
+  async refresh(): Promise<ApiResponse<AuthResponseData>> {
+    const { refreshToken } = useAuthStore.getState();
 
-//     if (store.user && store.token) return store.user;
+    return (await apiClient.post("/Users/refresh", {
+      refreshToken,
+    })) as unknown as ApiResponse<AuthResponseData>;
+  },
 
-//     if (currentUserPromise) return currentUserPromise;
+  async getCurrentUser(): Promise<AuthUser | null> {
+    const store = useAuthStore.getState();
 
-//     currentUserPromise = (async () => {
-//       try {
-//         const response = await apiClient.post("/Users/refresh");
-//         const result = response.data;
+    if (store.user && store.token) return store.user;
+    if (currentUserPromise) return currentUserPromise;
 
-//         if (result.isSuccess && result.data) {
-//           const { user, token, permissions } = result.data;
+    currentUserPromise = (async () => {
+      try {
+        const { refreshToken } = store;
+        if (!refreshToken) return null;
 
-//           store.setAuth(user, token, permissions);
-//           localStorage.setItem("logged_in", "true");
+        const result = (await apiClient.post("/Users/refresh", {
+          refreshToken,
+        })) as unknown as ApiResponse<AuthResponseData>;
 
-//           return user;
-//         }
-//       } catch (error) {
-//         localStorage.removeItem("logged_in");
-//         return null;
-//       }
+        if (result.isSuccess && result.data) {
+          const { user, token, refreshToken: newRefreshToken, permissions } = result.data;
 
-//       return null;
-//     })();
+          store.setAuth(user, token, newRefreshToken, permissions);
+          localStorage.setItem("logged_in", "true");
 
-//     return currentUserPromise.finally(() => {
-//       currentUserPromise = null;
-//     });
-//   },
+          return user;
+        }
+      } catch (error) {
+        localStorage.removeItem("logged_in");
+        return null;
+      }
+      return null;
+    })();
 
-//   async logout(): Promise<void> {
-//     try {
-//       await apiClient.post("/Users/logout");
-//     } catch (error) {
-//       console.error("Logout failed", error);
-//     } finally {
-//       useAuthStore.getState().clearAuth();
-//       localStorage.removeItem("logged_in");
-//     }
-//   },
-// };
+    return currentUserPromise.finally(() => {
+      currentUserPromise = null;
+    });
+  },
+
+  async logout(): Promise<void> {
+    const { refreshToken } = useAuthStore.getState();
+
+    try {
+      await apiClient.post("/Users/logout", { refreshToken });
+    } catch (error) {
+      console.error("Logout failed", error);
+    } finally {
+      useAuthStore.getState().clearAuth();
+      localStorage.removeItem("logged_in");
+    }
+  },
+};

@@ -3,7 +3,6 @@ import { useAuthStore } from "@/store/auth.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
-// --- 1. KHỞI TẠO (Giống bản của bạn nhưng nâng timeout lên xíu cho chắc) ---
 const apiClient: AxiosInstance = axiosOriginal.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
@@ -13,7 +12,6 @@ const apiClient: AxiosInstance = axiosOriginal.create({
   withCredentials: true,
 });
 
-// --- 2. REQUEST INTERCEPTOR (Để tự lấy token từ Zustand) ---
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = useAuthStore.getState().token;
@@ -25,7 +23,6 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Biến phụ trợ cho Silent Refresh (TellMeWeb logic)
 let isRefreshing = false;
 
 interface FailedRequest {
@@ -43,16 +40,13 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// --- 3. RESPONSE INTERCEPTOR (Gộp bản của bạn và bản Refresh) ---
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Trả về thẳng cục data (Giống hệt ý bạn muốn)
     return response.data;
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Nếu lỗi 401 (Unauthorized) - Bắt đầu quy trình Refresh Token
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -76,30 +70,36 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Gọi API Refresh khớp với Backend của bạn
-        const res = await axiosOriginal.post(`${API_BASE_URL}/Users/refresh`, {}, { withCredentials: true });
-        if (res.data && res.data.isSuccess) {
-          const { user, token, permissions } = res.data.data;
+        const refreshToken = useAuthStore.getState().refreshToken;
 
-          // Cập nhật Store
-          useAuthStore.getState().setAuth(user, token, permissions);
+        const res = await axiosOriginal.post(
+          `${API_BASE_URL}/Users/refresh`,
+          { refreshToken },
+          { withCredentials: true },
+        );
+
+        if (res.data && res.data.isSuccess) {
+          const { user, token, refreshToken: newRefreshToken, permissions } = res.data.data;
+
+          useAuthStore.getState().setAuth(user, token, newRefreshToken, permissions);
 
           processQueue(null, token);
+
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${token}`;
           }
+
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
         processQueue(refreshError, null);
-        useAuthStore.getState().clearAuth(); // Refresh hỏng thì bắt login lại
+        useAuthStore.getState().clearAuth();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
-    // Phần console.error giống bản của bạn
     console.error("Lỗi gọi API:", error.message);
     return Promise.reject(error);
   },
