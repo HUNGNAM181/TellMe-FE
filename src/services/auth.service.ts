@@ -7,7 +7,7 @@ let currentUserPromise: Promise<AuthUser | null> | null = null;
 
 export const authService = {
   async login(data: LoginRequest): Promise<AuthResponseData> {
-    const result = (await apiClient.post("/Users/login", data)) as unknown as ApiResponse<AuthResponseData>;
+    const result = (await apiClient.post("/api/Users/login", data)) as unknown as ApiResponse<AuthResponseData>;
 
     if (result.isSuccess && result.data) {
       const { user, token, refreshToken, permissions } = result.data;
@@ -24,7 +24,7 @@ export const authService = {
   async refresh(): Promise<ApiResponse<AuthResponseData>> {
     const { refreshToken } = useAuthStore.getState();
 
-    return (await apiClient.post("/Users/refresh", {
+    return (await apiClient.post("/api/Users/refresh", {
       refreshToken,
     })) as unknown as ApiResponse<AuthResponseData>;
   },
@@ -40,7 +40,7 @@ export const authService = {
         const { refreshToken } = store;
         if (!refreshToken) return null;
 
-        const result = (await apiClient.post("/Users/refresh", {
+        const result = (await apiClient.post("/api/Users/refresh", {
           refreshToken,
         })) as unknown as ApiResponse<AuthResponseData>;
 
@@ -68,7 +68,7 @@ export const authService = {
     const { refreshToken } = useAuthStore.getState();
 
     try {
-      await apiClient.post("/Users/logout", { refreshToken });
+      await apiClient.post("/api/Users/logout", { refreshToken });
     } catch (error) {
       console.error("Logout failed", error);
     } finally {
