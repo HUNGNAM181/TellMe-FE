@@ -7,7 +7,7 @@ import { webSocketService } from "../services/webSocket.service";
 import { Customer, Message } from "../types/chat.types";
 import { ChatInput } from "./chat/ChatInput";
 import { MessageBubble } from "./chat/MessageBubble";
-import { formatDateSeparator } from "@/lib/utils";
+import { formatDateSeparator } from "@/lib/formatters";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";

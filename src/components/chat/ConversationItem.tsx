@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { User } from "lucide-react";
 import { Conversation } from "../../types/chat.types";
-import { formatLocalTime, createSlug } from "../../lib/utils";
+import { formatLocalTime, createSlug } from "../../lib/formatters";
 
 interface ConversationItemProps {
   conv: Conversation;

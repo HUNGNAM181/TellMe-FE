@@ -1,7 +1,7 @@
 import React from "react";
 import clsx from "clsx";
 import { Message } from "../../types/chat.types";
-import { formatLocalTime } from "@/lib/utils";
+import { formatLocalTime } from "@/lib/formatters";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { useState } from "react";
 import { Reply, Smile } from "lucide-react";
