@@ -50,8 +50,8 @@ apiClient.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/Users/login") &&
-      !originalRequest.url?.includes("/Users/refresh")
+      !originalRequest.url?.includes("/api/Users/login") &&
+      !originalRequest.url?.includes("/api/Users/refresh")
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -73,7 +73,7 @@ apiClient.interceptors.response.use(
         const refreshToken = useAuthStore.getState().refreshToken;
 
         const res = await axiosOriginal.post(
-          `${API_BASE_URL}/Users/refresh`,
+          `${API_BASE_URL}/api/Users/refresh`,
           { refreshToken },
           { withCredentials: true },
         );

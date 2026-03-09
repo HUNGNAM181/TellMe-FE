@@ -5,15 +5,19 @@ import { useAuthStore } from "@/store/auth.store";
 
 let currentUserPromise: Promise<AuthUser | null> | null = null;
 
+function shouldRefresh(tokenExpiresAt: string | null) {
+  if (!tokenExpiresAt) return false;
+  return new Date(tokenExpiresAt).getTime() - Date.now() < 60 * 1000;
+}
+
 export const authService = {
   async login(data: LoginRequest): Promise<AuthResponseData> {
     const result = (await apiClient.post("/api/Users/login", data)) as unknown as ApiResponse<AuthResponseData>;
 
     if (result.isSuccess && result.data) {
-      const { user, token, refreshToken, permissions } = result.data;
+      const { user, token, refreshToken, permissions, expiresAt } = result.data;
 
-      useAuthStore.getState().setAuth(user, token, refreshToken, permissions);
-      localStorage.setItem("logged_in", "true");
+      useAuthStore.getState().setAuth(user, token, refreshToken, permissions, expiresAt);
 
       return result.data;
     }
@@ -21,42 +25,48 @@ export const authService = {
     throw new Error(result.errorMessage || "Login failed");
   },
 
-  async refresh(): Promise<ApiResponse<AuthResponseData>> {
+  async refresh(): Promise<AuthResponseData | null> {
     const { refreshToken } = useAuthStore.getState();
 
-    return (await apiClient.post("/api/Users/refresh", {
+    if (!refreshToken) {
+      useAuthStore.getState().clearAuth();
+      return null;
+    }
+
+    const result = (await apiClient.post("/api/Users/refresh", {
       refreshToken,
     })) as unknown as ApiResponse<AuthResponseData>;
+
+    if (result.isSuccess && result.data) {
+      const { user, token, refreshToken: newRefreshToken, permissions, expiresAt } = result.data;
+
+      useAuthStore.getState().setAuth(user, token, newRefreshToken, permissions, expiresAt);
+
+      return result.data;
+    }
+
+    useAuthStore.getState().clearAuth();
+    return null;
   },
 
   async getCurrentUser(): Promise<AuthUser | null> {
     const store = useAuthStore.getState();
 
-    if (store.user && store.token) return store.user;
+    if (store.user && store.token && !shouldRefresh(store.tokenExpiresAt)) {
+      return store.user;
+    }
+
     if (currentUserPromise) return currentUserPromise;
 
     currentUserPromise = (async () => {
       try {
-        const { refreshToken } = store;
-        if (!refreshToken) return null;
-
-        const result = (await apiClient.post("/api/Users/refresh", {
-          refreshToken,
-        })) as unknown as ApiResponse<AuthResponseData>;
-
-        if (result.isSuccess && result.data) {
-          const { user, token, refreshToken: newRefreshToken, permissions } = result.data;
-
-          store.setAuth(user, token, newRefreshToken, permissions);
-          localStorage.setItem("logged_in", "true");
-
-          return user;
-        }
+        const data = await this.refresh();
+        return data?.user || null;
       } catch (error) {
-        localStorage.removeItem("logged_in");
+        console.error("Refresh failed", error);
+        useAuthStore.getState().clearAuth();
         return null;
       }
-      return null;
     })();
 
     return currentUserPromise.finally(() => {
@@ -68,12 +78,14 @@ export const authService = {
     const { refreshToken } = useAuthStore.getState();
 
     try {
-      await apiClient.post("/api/Users/logout", { refreshToken });
+      if (refreshToken) {
+        await apiClient.post("/api/Users/logout", { refreshToken });
+      }
     } catch (error) {
       console.error("Logout failed", error);
     } finally {
       useAuthStore.getState().clearAuth();
-      localStorage.removeItem("logged_in");
+      localStorage.removeItem("auth-storage");
     }
   },
 };
