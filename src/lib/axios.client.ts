@@ -15,9 +15,11 @@ const apiClient: AxiosInstance = axiosOriginal.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = useAuthStore.getState().token;
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error),
@@ -26,17 +28,18 @@ apiClient.interceptors.request.use(
 let isRefreshing = false;
 
 interface FailedRequest {
-  resolve: (token: string | null) => void;
-  reject: (error: unknown) => void;
+  resolve: (value?: unknown) => void;
+  reject: (error?: unknown) => void;
 }
 
 let failedQueue: FailedRequest[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(token);
   });
+
   failedQueue = [];
 };
 
@@ -44,8 +47,11 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response.data;
   },
+
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
     if (
       error.response?.status === 401 &&
@@ -59,8 +65,9 @@ apiClient.interceptors.response.use(
         })
           .then((token) => {
             if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
+              originalRequest.headers.Authorization = `Bearer ${token as string}`;
             }
+
             return apiClient(originalRequest);
           })
           .catch((err) => Promise.reject(err));
@@ -79,9 +86,9 @@ apiClient.interceptors.response.use(
         );
 
         if (res.data && res.data.isSuccess) {
-          const { user, token, refreshToken: newRefreshToken, permissions } = res.data.data;
+          const { user, token, refreshToken: newRefreshToken, permissions, tokenExpiresAt } = res.data.data;
 
-          useAuthStore.getState().setAuth(user, token, newRefreshToken, permissions);
+          useAuthStore.getState().setAuth(user, token, newRefreshToken, permissions, tokenExpiresAt);
 
           processQueue(null, token);
 
@@ -94,6 +101,7 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         useAuthStore.getState().clearAuth();
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -101,6 +109,7 @@ apiClient.interceptors.response.use(
     }
 
     console.error("Lỗi gọi API:", error.message);
+
     return Promise.reject(error);
   },
 );

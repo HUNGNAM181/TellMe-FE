@@ -16,7 +16,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="flex items-center justify-between px-8 py-4 bg-white shadow">
         <h1 className="text-xl font-bold">Dashboard</h1>
 
