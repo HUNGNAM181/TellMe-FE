@@ -7,10 +7,18 @@ interface AuthState {
   token: string | null;
   refreshToken: string | null;
   tokenExpiresAt: string | null;
+  refreshTokenExpiresAt: string | null;
   permissions: string[];
   isAuthenticated: boolean;
 
-  setAuth: (user: AuthUser, token: string, refreshToken: string, permissions: string[], tokenExpiresAt: string) => void;
+  setAuth: (
+    user: AuthUser,
+    token: string,
+    refreshToken: string,
+    permissions: string[],
+    tokenExpiresAt: string,
+    refreshTokenExpiresAt?: string | null,
+  ) => void;
 
   clearAuth: () => void;
   setUser: (user: AuthUser) => void;
@@ -23,15 +31,17 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       refreshToken: null,
       tokenExpiresAt: null,
+      refreshTokenExpiresAt: null,
       permissions: [],
       isAuthenticated: false,
 
-      setAuth: (user, token, refreshToken, permissions, tokenExpiresAt) =>
+      setAuth: (user, token, refreshToken, permissions, tokenExpiresAt, refreshTokenExpiresAt = null) =>
         set({
           user,
           token,
           refreshToken,
           tokenExpiresAt,
+          refreshTokenExpiresAt,
           permissions,
           isAuthenticated: true,
         }),
@@ -42,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           refreshToken: null,
           tokenExpiresAt: null,
+          refreshTokenExpiresAt: null,
           permissions: [],
           isAuthenticated: false,
         }),
@@ -53,6 +64,16 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage",
+
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        refreshToken: state.refreshToken,
+        tokenExpiresAt: state.tokenExpiresAt,
+        refreshTokenExpiresAt: state.refreshTokenExpiresAt,
+        permissions: state.permissions,
+        isAuthenticated: state.isAuthenticated,
+      }),
     },
   ),
 );

@@ -3,6 +3,8 @@ import { useAuthStore } from "@/store/auth.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:7172";
 
+const LOGIN_PATH = "/signin";
+
 const apiClient: AxiosInstance = axiosOriginal.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
@@ -49,7 +51,7 @@ apiClient.interceptors.response.use(
   },
 
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
+    const originalRequest = (error.config || {}) as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
 
@@ -79,6 +81,12 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = useAuthStore.getState().refreshToken;
 
+        if (!refreshToken) {
+          useAuthStore.getState().clearAuth();
+          window.location.href = LOGIN_PATH;
+          return Promise.reject(error);
+        }
+
         const res = await axiosOriginal.post(
           `${API_BASE_URL}/api/Users/refresh`,
           { refreshToken },
@@ -86,9 +94,16 @@ apiClient.interceptors.response.use(
         );
 
         if (res.data && res.data.isSuccess) {
-          const { user, token, refreshToken: newRefreshToken, permissions, tokenExpiresAt } = res.data.data;
+          const {
+            user,
+            token,
+            refreshToken: newRefreshToken,
+            permissions,
+            expiresAt,
+            refreshTokenExpiresAt,
+          } = res.data.data;
 
-          useAuthStore.getState().setAuth(user, token, newRefreshToken, permissions, tokenExpiresAt);
+          useAuthStore.getState().setAuth(user, token, newRefreshToken, permissions, expiresAt, refreshTokenExpiresAt);
 
           processQueue(null, token);
 
@@ -100,7 +115,9 @@ apiClient.interceptors.response.use(
         }
       } catch (refreshError) {
         processQueue(refreshError, null);
+
         useAuthStore.getState().clearAuth();
+        window.location.href = LOGIN_PATH;
 
         return Promise.reject(refreshError);
       } finally {
@@ -108,7 +125,11 @@ apiClient.interceptors.response.use(
       }
     }
 
-    console.error("Lỗi gọi API:", error.message);
+    console.error("API Error:", {
+      message: error.message,
+      status: error.response?.status,
+      url: error.config?.url,
+    });
 
     return Promise.reject(error);
   },

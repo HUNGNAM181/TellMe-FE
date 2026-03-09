@@ -7,6 +7,7 @@ let currentUserPromise: Promise<AuthUser | null> | null = null;
 
 function shouldRefresh(tokenExpiresAt: string | null) {
   if (!tokenExpiresAt) return false;
+
   return new Date(tokenExpiresAt).getTime() - Date.now() < 60 * 1000;
 }
 
@@ -15,9 +16,9 @@ export const authService = {
     const result = (await apiClient.post("/api/Users/login", data)) as unknown as ApiResponse<AuthResponseData>;
 
     if (result.isSuccess && result.data) {
-      const { user, token, refreshToken, permissions, expiresAt } = result.data;
+      const { user, token, refreshToken, permissions, expiresAt, refreshTokenExpiresAt } = result.data;
 
-      useAuthStore.getState().setAuth(user, token, refreshToken, permissions, expiresAt);
+      useAuthStore.getState().setAuth(user, token, refreshToken, permissions, expiresAt, refreshTokenExpiresAt);
 
       return result.data;
     }
@@ -38,9 +39,9 @@ export const authService = {
     })) as unknown as ApiResponse<AuthResponseData>;
 
     if (result.isSuccess && result.data) {
-      const { user, token, refreshToken: newRefreshToken, permissions, expiresAt } = result.data;
+      const { user, token, refreshToken: newRefreshToken, permissions, expiresAt, refreshTokenExpiresAt } = result.data;
 
-      useAuthStore.getState().setAuth(user, token, newRefreshToken, permissions, expiresAt);
+      useAuthStore.getState().setAuth(user, token, newRefreshToken, permissions, expiresAt, refreshTokenExpiresAt);
 
       return result.data;
     }
