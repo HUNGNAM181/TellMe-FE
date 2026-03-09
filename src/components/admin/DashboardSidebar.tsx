@@ -8,7 +8,7 @@ import { authService } from "@/services/auth.service";
 const sidebarItems = [
   {
     name: "Social Commerce Inbox",
-    path: "/dashboard",
+    path: "/dashboard/conversations",
     icon: MessageSquare,
   },
   {
@@ -30,8 +30,8 @@ export default function DashboardSidebar() {
   return (
     <div className="w-64 bg-white border-r h-screen flex flex-col">
       <div className="p-6 border-b">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-purple-400 rounded-lg flex items-center justify-center">
+        <Link href="/dashboard/conversations" className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
             <Zap className="w-5 h-5 text-white" />
           </div>
 
@@ -46,14 +46,15 @@ export default function DashboardSidebar() {
         <ul className="space-y-2">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.path;
+
+            const active = pathname.startsWith(item.path);
 
             return (
               <li key={item.path}>
                 <Link
                   href={item.path}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                  ${active ? "bg-purple-400 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                  ${active ? "bg-purple-500 text-white" : "text-gray-600 hover:bg-gray-100"}`}
                 >
                   <Icon className="w-5 h-5" />
                   {item.name}
