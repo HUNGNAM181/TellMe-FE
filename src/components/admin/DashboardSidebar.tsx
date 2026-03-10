@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Zap, MessageSquare, Users, LogOut } from "lucide-react";
+import { Zap, MessageCircle, Users, LogOut } from "lucide-react";
 import { authService } from "@/services/auth.service";
 
 const sidebarItems = [
   {
     name: "Social Commerce Inbox",
     path: "/dashboard/conversations",
-    icon: MessageSquare,
+    icon: MessageCircle,
   },
   {
     name: "User Management",
@@ -36,7 +36,7 @@ export default function DashboardSidebar() {
           </div>
 
           <div>
-            <h2 className="font-bold text-lg">ChatBot Pro</h2>
+            <h2 className="font-bold text-lg">TellMe AI</h2>
             <p className="text-xs text-gray-500">Admin Dashboard</p>
           </div>
         </Link>
