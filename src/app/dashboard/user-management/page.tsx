@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useRoles } from "@/features/Role/useRoles";
 import RoleDialog, { type RoleDialogMode } from "@/features/Role/components/RoleDialog";
 import type { RoleBriefDto, RoleFormValues } from "@/types/role.type";
@@ -144,7 +145,6 @@ function RolesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this role?")) return;
     await deleteRole(id);
   };
   return (
@@ -214,15 +214,20 @@ function RolesPage() {
                       <Edit2 className="w-3 h-3" />
                       Edit
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDelete(role.id)}
-                      className="h-8 px-2 text-xs"
+                    <ConfirmModal
+                      title="Delete role"
+                      description="Are you sure you want to delete this role? This action cannot be undone."
+                      onConfirm={() => handleDelete(role.id)}
                     >
-                      <Trash2 className="w-3 h-3" />
-                      Delete
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-8 px-2 text-xs"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Delete
+                      </Button>
+                    </ConfirmModal>
                   </TableCell>
                 </TableRow>
               ))

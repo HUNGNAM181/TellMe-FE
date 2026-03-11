@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { roleFormSchema } from "@/features/Role/role.schema";
 import type { PermissionDto } from "@/types/permission.type";
 import type { RoleFormValues } from "@/types/role.type";
@@ -34,6 +35,8 @@ export function RoleDialog({
   const [formValues, setFormValues] = useState<RoleFormValues>(initialValues);
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof RoleFormValues, string>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<RoleFormValues | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -56,7 +59,6 @@ export function RoleDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     try {
       const result = roleFormSchema.safeParse(formValues);
       if (!result.success) {
@@ -70,11 +72,24 @@ export function RoleDialog({
         setFormErrors(fieldErrors);
         return;
       }
+      setFormErrors({});
+      setPendingValues(result.data);
+      setConfirmOpen(true);
+    } finally {
+      // không đổi submitting ở đây, chỉ dùng cho bước confirm
+    }
+  };
 
-      await onSubmit(result.data);
+  const handleConfirm = async () => {
+    if (!pendingValues) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(pendingValues);
       onOpenChange(false);
     } finally {
       setSubmitting(false);
+      setConfirmOpen(false);
+      setPendingValues(null);
     }
   };
 
@@ -172,6 +187,18 @@ export function RoleDialog({
             </Button>
           </DialogFooter>
         </form>
+
+        <ConfirmModal
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title={mode === "edit" ? "Confirm update" : "Confirm create"}
+          description={
+            mode === "edit"
+              ? "Are you sure you want to save these changes?"
+              : "Are you sure you want to create this role?"
+          }
+          onConfirm={handleConfirm}
+        />
       </DialogContent>
     </Dialog>
   );
