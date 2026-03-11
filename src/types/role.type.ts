@@ -30,6 +30,7 @@ export interface RoleBriefDto {
   id: string;
   name: string;
   isActive: boolean;
+  description?: string | null;  
   permissions: PermissionBriefDto[];
 }
 

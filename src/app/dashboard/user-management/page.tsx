@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, Edit2, Users, UserCog } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,11 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useRoles } from "@/features/Role/useRoles";
 import RoleDialog, { type RoleDialogMode } from "@/features/Role/components/RoleDialog";
 import type { RoleBriefDto, RoleFormValues } from "@/types/role.type";
 import { useDebounce } from "@/hooks/useDebounce";
+import { CustomPagination } from "@/components/ui/CustomPagination";
 
 export default function UserManagementTabs() {
   const [activeTab, setActiveTab] = useState<"users" | "roles">("users");
@@ -70,6 +71,9 @@ function UsersPage() {
 
 function RolesPage() {
   const {
+    total,
+    filter,
+    setFilter,
     roles,
     permissions,
     loading,
@@ -90,7 +94,7 @@ function RolesPage() {
     isActive: true,
     permissionIds: [],
   });
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(filter.text);
   const debouncedSearchTerm = useDebounce(search, 500);
 
   const filteredRoles = useMemo(
@@ -99,12 +103,20 @@ function RolesPage() {
         role.name
           .toString()
           .toLowerCase()
-          .includes(debouncedSearchTerm.toLowerCase()),
+          .includes(filter.text.toLowerCase()),
       ),
-    [roles, debouncedSearchTerm],
+    [roles, filter.text],
   );
 
-  const isEditMode = !!currentRole;
+  const totalPages = useMemo(() => {
+    if (!total || !filter.limit) return 1;
+    return Math.max(1, Math.ceil(total / filter.limit));
+  }, [total, filter.limit]);
+
+  useEffect(() => {
+    // Debounce vẫn ở UI: khi debouncedSearchTerm đổi, cập nhật filter.text trong hook
+    setFilter({ text: debouncedSearchTerm });
+  }, [debouncedSearchTerm, setFilter]);
 
   const openCreateDialog = () => {
     setCurrentRole(null);
@@ -135,19 +147,6 @@ function RolesPage() {
     if (!window.confirm("Are you sure you want to delete this role?")) return;
     await deleteRole(id);
   };
-
-  // const togglePermission = (permissionId: string) => {
-  //   setFormValues((prev) => {
-  //     const exists = prev.permissionIds.includes(permissionId);
-  //     return {
-  //       ...prev,
-  //       permissionIds: exists
-  //         ? prev.permissionIds.filter((id) => id !== permissionId)
-  //         : [...prev.permissionIds, permissionId],
-  //     };
-  //   });
-  // };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -170,7 +169,7 @@ function RolesPage() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Permissions</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead className="w-[120px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -198,14 +197,10 @@ function RolesPage() {
                   </TableCell>
                   <TableCell className="max-w-xs">
                     <div className="flex flex-wrap gap-1 text-sm text-muted-foreground">
-                      {role.permissions.length === 0 ? (
-                        <span>No permissions</span>
+                      {role.description ? (
+                        <span>{role.description}</span>
                       ) : (
-                        role.permissions.map((p) => (
-                          <Badge key={p.id} variant="outline">
-                            {p.name}
-                          </Badge>
-                        ))
+                        <span className="text-muted-foreground">No description</span>
                       )}
                     </div>
                   </TableCell>
@@ -233,6 +228,19 @@ function RolesPage() {
               ))
             )}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={4}>
+                <div className="flex justify-center py-2">
+                  <CustomPagination
+                    page={filter.page}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => setFilter({ page: newPage })}
+                  />
+                </div>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
       </div>
 

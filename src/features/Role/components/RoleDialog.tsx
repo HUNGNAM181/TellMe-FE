@@ -78,20 +78,21 @@ export function RoleDialog({
     }
   };
 
-  const title = mode === "edit" ? "Edit Role" : "Create Role";
+  const title = mode === "edit" ? "Edit role" : "Create new role";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader>
+        <DialogHeader className="space-y-1">
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div className="space-y-2">
             <Label htmlFor="role-name">Name</Label>
             <Input
               id="role-name"
+              placeholder="e.g. Administrator"
               value={formValues.name}
               onChange={(e) => setFormValues((prev) => ({ ...prev, name: e.target.value }))}
             />
@@ -102,36 +103,58 @@ export function RoleDialog({
             <Label htmlFor="role-description">Description</Label>
             <Input
               id="role-description"
+              placeholder="Short description of this role"
               value={formValues.description || ""}
               onChange={(e) => setFormValues((prev) => ({ ...prev, description: e.target.value }))}
             />
             {formErrors.description && <p className="text-xs text-red-500">{formErrors.description}</p>}
           </div>
 
+          <div className="flex items-center gap-2 rounded-md border px-3 py-2 bg-muted/40">
+            <input
+              id="role-active"
+              type="checkbox"
+              className="h-4 w-4 accent-primary"
+              checked={!!formValues.isActive}
+              onChange={(e) => setFormValues((prev) => ({ ...prev, isActive: e.target.checked }))}
+            />
+            <div className="space-y-0.5">
+              <Label htmlFor="role-active" className="text-sm font-medium">
+                Active
+              </Label>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label>Permissions</Label>
-            <div className="border rounded-md max-h-48 overflow-auto p-2 space-y-1 text-sm">
+            <div className="flex items-center justify-between">
+              <Label>Permissions</Label>
+              <p className="text-xs text-muted-foreground">Select one or more permissions for this role.</p>
+            </div>
+
+            <div className="border rounded-md max-h-60 overflow-auto p-2 space-y-1 text-sm bg-muted/20">
               {loadingPermissions ? (
-                <div className="text-muted-foreground text-xs">Loading permissions...</div>
+                <div className="text-muted-foreground text-xs px-2 py-1">Loading permissions...</div>
               ) : permissions.length === 0 ? (
-                <div className="text-muted-foreground text-xs">No permissions available.</div>
+                <div className="text-muted-foreground text-xs px-2 py-1">No permissions available.</div>
               ) : (
                 permissions.map((permission) => {
                   const checked = formValues.permissionIds.includes(permission.id);
                   return (
                     <label
                       key={permission.id}
-                      className="flex items-center justify-between gap-2 px-2 py-1 rounded hover:bg-muted/60 cursor-pointer"
+                      className="flex items-center justify-between gap-2 px-2 py-1 rounded-md hover:bg-muted cursor-pointer"
                     >
                       <div className="flex flex-col">
                         <span className="font-medium text-sm">{permission.name}</span>
                         {permission.description && (
-                          <span className="text-xs text-muted-foreground">{permission.description}</span>
+                          <span className="text-xs text-muted-foreground line-clamp-2">
+                            {permission.description}
+                          </span>
                         )}
                       </div>
                       <input
                         type="checkbox"
-                        className="h-3 w-3"
+                        className="h-3 w-3 accent-primary"
                         checked={checked}
                         onChange={() => togglePermission(permission.id)}
                       />
@@ -144,8 +167,8 @@ export function RoleDialog({
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Saving..." : mode === "edit" ? "Save changes" : "Create"}
+            <Button type="submit" disabled={submitting} className="min-w-[120px]">
+              {submitting ? "Saving..." : mode === "edit" ? "Save changes" : "Create role"}
             </Button>
           </DialogFooter>
         </form>

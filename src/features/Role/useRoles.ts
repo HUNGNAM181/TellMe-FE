@@ -28,6 +28,10 @@ interface UsePermissionsState {
   loadingPermissions: boolean;
 }
 
+export interface RoleFilter extends Pick<Pagination, "page" | "limit"> {
+  text: string;
+}
+
 export function useRoles(options?: UseRolesOptions) {
   const { initialPage = 1, initialLimit = 20 } = options || {};
   const { toast } = useToast();
@@ -44,6 +48,12 @@ export function useRoles(options?: UseRolesOptions) {
   const [permissionsState, setPermissionsState] = useState<UsePermissionsState>({
     permissions: [],
     loadingPermissions: false,
+  });
+
+  const [filter, setFilterState] = useState<RoleFilter>({
+    text: "",
+    page: initialPage,
+    limit: initialLimit,
   });
 
   const [currentRole, setCurrentRole] = useState<RoleDto | null>(null);
@@ -141,7 +151,7 @@ export function useRoles(options?: UseRolesOptions) {
         await fetchRoles();
         return res.data ?? null;
       } catch (error: any) {
-        const message = error?.message || "Failed to create role";
+        const message = error?.message || "Failed to create role";        
         toast({
           title: "Error",
           description: message,
@@ -202,15 +212,24 @@ export function useRoles(options?: UseRolesOptions) {
     [fetchRoles, toast],
   );
 
-  const setPage = (page: number) => {
-    setState((prev) => ({ ...prev, page }));
-    fetchRoles({ page, limit: state.limit });
-  };
+  const setFilter = useCallback(
+    (update: Partial<RoleFilter>) => {
+      setFilterState((prev) => {
+        const next: RoleFilter = {
+          ...prev,
+          ...update,
+        };
 
-  const setLimit = (limit: number) => {
-    setState((prev) => ({ ...prev, limit }));
-    fetchRoles({ page: state.page, limit });
-  };
+        // Nếu page hoặc limit thay đổi, fetch lại từ API
+        if (update.page !== undefined || update.limit !== undefined) {
+          fetchRoles({ page: next.page, limit: next.limit });
+        }
+
+        return next;
+      });
+    },
+    [fetchRoles],
+  );
 
   return {
     // roles
@@ -220,6 +239,10 @@ export function useRoles(options?: UseRolesOptions) {
     limit: state.limit,
     loading: state.loading,
     error: state.error,
+
+    // filter
+    filter,
+    setFilter,
 
     // permissions
     permissions: permissionsState.permissions,
@@ -235,8 +258,6 @@ export function useRoles(options?: UseRolesOptions) {
     refetchRoles: fetchRoles,
     createRole,
     updateRole,
-    deleteRole,
-    setPage,
-    setLimit,
+    deleteRole
   };
 }

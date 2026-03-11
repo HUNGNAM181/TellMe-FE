@@ -131,6 +131,12 @@ apiClient.interceptors.response.use(
       url: error.config?.url,
     });
 
+    // Chuẩn hóa lỗi business theo dạng ApiResult có errorMessage
+    const apiResult = error.response?.data as { errorMessage?: string } | undefined;
+    if (apiResult?.errorMessage) {
+      return Promise.reject(new Error(apiResult.errorMessage));
+    }
+
     return Promise.reject(error);
   },
 );
