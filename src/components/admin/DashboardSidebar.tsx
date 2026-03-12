@@ -24,7 +24,7 @@ export default function DashboardSidebar() {
 
   const handleLogout = async () => {
     await authService.logout();
-    router.push("/signin");
+    router.push("/auth?mode=signin");
   };
 
   return (
