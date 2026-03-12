@@ -3,7 +3,7 @@ import { useAuthStore } from "@/store/auth.store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:7172";
 
-const LOGIN_PATH = "/signin";
+const LOGIN_PATH = "/auth?mode=signin";
 
 const apiClient: AxiosInstance = axiosOriginal.create({
   baseURL: API_BASE_URL,

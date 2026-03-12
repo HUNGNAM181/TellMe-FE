@@ -1,4 +1,5 @@
 import AuthPage from "@/features/Auth/components/Auth";
-export default function SignUpPage() {
+
+export default function Page() {
   return <AuthPage />;
 }

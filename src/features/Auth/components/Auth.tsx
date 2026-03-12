@@ -2,20 +2,20 @@
 
 import SignInForm from "./signIn-form";
 import SignUpForm from "./signUp-form";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AuthPage() {
-  const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const isRegister = pathname === "/signup";
+  const isRegister = searchParams.get("mode") === "signup";
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-[#e2e2e2] to-[#c9d6ff]">
       <div className="relative w-[850px] h-[600px] bg-white rounded-[30px] shadow-[0_0_30px_rgba(0,0,0,0.2)] overflow-hidden">
         <div
           className={`absolute top-0 h-full w-1/2 transition-all duration-1000 ease-in-out z-10
-          ${isRegister ? "translate-x-full opacity-100" : "opacity-0"}
+          ${isRegister ? "translate-x-full opacity-100 visible" : "left-0 opacity-0 invisible"}
         `}
         >
           <SignUpForm isActive={isRegister} />
@@ -23,7 +23,7 @@ export default function AuthPage() {
 
         <div
           className={`absolute top-0 h-full w-1/2 transition-all duration-1000 ease-in-out z-20
-          ${isRegister ? "translate-x-full opacity-0" : "left-0"}
+          ${isRegister ? "translate-x-full opacity-0 invisible" : "left-0"}
         `}
         >
           <SignInForm isActive={!isRegister} />
@@ -48,7 +48,7 @@ export default function AuthPage() {
               <p className="mb-6">Already have an account?</p>
 
               <button
-                onClick={() => router.push("/signin")}
+                onClick={() => router.push("/auth?mode=signin")}
                 className="cursor-pointer bg-transparent border border-white text-white py-2 px-10 rounded-lg font-semibold tracking-wider hover:bg-white/20 transition-colors"
               >
                 Sign In
@@ -64,7 +64,7 @@ export default function AuthPage() {
               <p className="mb-6">Don't have an account?</p>
 
               <button
-                onClick={() => router.push("/signup")}
+                onClick={() => router.push("/auth?mode=signup")}
                 className="cursor-pointer bg-transparent border border-white text-white py-2 px-10 rounded-lg font-semibold tracking-wider hover:bg-white/20 transition-colors"
               >
                 Sign Up
