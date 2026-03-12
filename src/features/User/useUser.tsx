@@ -35,7 +35,7 @@ export interface UserFilter extends Pick<Pagination, "page" | "limit"> {
 }
 
 export function useUsers(options?: UseUsersOptions) {
-  const { initialPage = 1, initialLimit = 2 } = options || {};
+  const { initialPage = 1, initialLimit = 20 } = options || {};
   const { toast } = useToast();
 
   const [state, setState] = useState<UseUsersState>({
