@@ -1,14 +1,19 @@
-import { Pagination } from "@/types/api.types";
+import { UserQuery } from "@/types/user.types";
 import apiClient from "../lib/axios.client";
 import { UserDto, CreateUserPayload, UpdateUserPayload } from "@/types/user.types";
-import { ApiResponse } from "../types/api.types";
+import { ApiResponse, Pagination } from "../types/api.types";
 
 export const userService = {
-  getUsers: async (params?: Pagination): Promise<ApiResponse<UserDto[]>> => {
-    const { page = 1, limit = 20 } = params || {};
+  getUsers: async (params?: UserQuery): Promise<ApiResponse<UserDto[]>> => {
+    const { page = 1, limit = 20, username, roleId } = params || {};
 
     const data = await apiClient.get<ApiResponse<UserDto[]>, ApiResponse<UserDto[]>>("/api/Users", {
-      params: { pageNumber: page, pageSize: limit },
+      params: {
+        pageNumber: page,
+        pageSize: limit,
+        username,
+        roleId,
+      },
     });
 
     return data;

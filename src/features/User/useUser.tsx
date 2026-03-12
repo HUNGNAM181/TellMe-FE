@@ -31,10 +31,11 @@ interface UseRolesState {
 
 export interface UserFilter extends Pick<Pagination, "page" | "limit"> {
   text: string;
+  roleId?: string;
 }
 
 export function useUsers(options?: UseUsersOptions) {
-  const { initialPage = 1, initialLimit = 20 } = options || {};
+  const { initialPage = 1, initialLimit = 2 } = options || {};
   const { toast } = useToast();
 
   const [state, setState] = useState<UseUsersState>({
@@ -61,14 +62,21 @@ export function useUsers(options?: UseUsersOptions) {
   const [loadingUser, setLoadingUser] = useState(false);
 
   const fetchUsers = useCallback(
-    async (override?: Pagination) => {
+    async (override?: Partial<UserFilter>) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        const page = override?.page ?? state.page;
-        const limit = override?.limit ?? state.limit;
+        const page = override?.page ?? filter.page;
+        const limit = override?.limit ?? filter.limit;
+        const text = override?.text ?? filter.text;
+        const roleId = override?.roleId ?? filter.roleId;
 
-        const res = await userService.getUsers({ page, limit });
+        const res = await userService.getUsers({
+          page,
+          limit,
+          username: text?.trim() || undefined,
+          roleId: roleId || undefined,
+        });
 
         if (!res.isSuccess) {
           throw new Error(res.errorMessage || "Failed to load users");
@@ -97,7 +105,7 @@ export function useUsers(options?: UseUsersOptions) {
         });
       }
     },
-    [state.page, state.limit, toast],
+    [filter.page, filter.limit, filter.text, filter.roleId, toast],
   );
 
   const fetchRoles = useCallback(async () => {
@@ -132,7 +140,7 @@ export function useUsers(options?: UseUsersOptions) {
   useEffect(() => {
     fetchUsers();
     fetchRoles();
-  }, []);
+  }, [fetchUsers, fetchRoles]);
 
   const loadUserById = useCallback(
     async (id: string) => {
@@ -265,9 +273,7 @@ export function useUsers(options?: UseUsersOptions) {
           ...update,
         };
 
-        if (update.page !== undefined || update.limit !== undefined) {
-          fetchUsers({ page: next.page, limit: next.limit });
-        }
+        fetchUsers(next);
 
         return next;
       });

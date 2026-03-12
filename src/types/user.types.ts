@@ -1,5 +1,10 @@
 import { RoleDto } from "./role.type";
+import { Pagination } from "./api.types";
 
+export interface UserQuery extends Pagination {
+  username?: string;
+  roleId?: string;
+}
 export interface UserDto {
   id: string;
   username: string;

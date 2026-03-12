@@ -34,8 +34,14 @@ export default function UsersPage() {
   }, [total, filter.limit]);
 
   useEffect(() => {
-    setFilter({ text: debouncedSearchTerm });
-  }, [debouncedSearchTerm, setFilter]);
+    if (debouncedSearchTerm !== filter.text) {
+      setFilter({
+        ...filter,
+        text: debouncedSearchTerm,
+        page: 1,
+      });
+    }
+  }, [debouncedSearchTerm]);
 
   const handleDelete = async (id: string) => {
     await deleteUser(id);
@@ -91,7 +97,7 @@ export default function UsersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Input
-          placeholder="Search users..."
+          placeholder="Search users by usersname..."
           className="w-full max-w-md"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
