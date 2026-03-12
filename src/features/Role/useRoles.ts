@@ -92,7 +92,7 @@ export function useRoles(options?: UseRolesOptions) {
   const fetchPermissions = useCallback(async () => {
     setPermissionsState((prev) => ({ ...prev, loadingPermissions: true }));
     try {
-      const res = await permissionService.getAll({ page: 1, limit: 200 });
+      const res = await permissionService.getAll({ page: 1, limit: 20 });
       if (!res.isSuccess) {
         throw new Error(res.errorMessage || "Failed to load permissions");
       }
