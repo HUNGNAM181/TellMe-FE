@@ -13,6 +13,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { CustomPagination } from "@/components/ui/CustomPagination";
 import { useUsers } from "@/features/User/useUser";
 import { UserDto } from "@/types/user.types";
+import { UserFormValues } from "@/types/userForm.type";
+import type { CreateUserPayload, UpdateUserPayload } from "@/types/user.types";
 import UserDialog, { type UserDialogMode } from "@/features/User/components/UserDialog";
 
 export default function UsersPage() {
@@ -26,7 +28,7 @@ export default function UsersPage() {
 
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
-  const [dialogInitialValues, setDialogInitialValues] = useState<any>({});
+  const [dialogInitialValues, setDialogInitialValues] = useState<UserFormValues>({});
 
   const totalPages = useMemo(() => {
     if (!total || !filter.limit) return 1;
@@ -85,11 +87,11 @@ export default function UsersPage() {
     setDialogOpen(true);
   };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: UserFormValues) => {
     if (dialogMode === "edit" && editingUserId) {
-      await updateUser(editingUserId, values);
+      await updateUser(editingUserId, values as UpdateUserPayload);
     } else {
-      await createUser(values);
+      await createUser(values as CreateUserPayload);
     }
   };
 
@@ -97,7 +99,7 @@ export default function UsersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Input
-          placeholder="Search users by usersname..."
+          placeholder="Search users by username..."
           className="w-full max-w-md"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -118,7 +120,7 @@ export default function UsersPage() {
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead className="w-[120px] text-right">Actions</TableHead>
+              <TableHead className="w-30 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
 

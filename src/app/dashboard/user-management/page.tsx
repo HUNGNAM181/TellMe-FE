@@ -12,7 +12,7 @@ export default function UserManagementTabs() {
   const [activeTab, setActiveTab] = useState<"users" | "roles">("users");
 
   return (
-    <div className="max-full mx-auto">
+    <div className="w-full mx-auto">
       <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg font-semibold">

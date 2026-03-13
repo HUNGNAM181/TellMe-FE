@@ -28,16 +28,16 @@ export default function DashboardSidebar() {
   };
 
   return (
-    <div className="w-64 bg-white border-r h-screen flex flex-col">
+    <div className="w-64 shrink-0 bg-white border-r h-screen flex flex-col">
       <div className="p-6 border-b">
         <Link href="/dashboard/conversations" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <Zap className="w-5 h-5 text-primary-foreground" />
           </div>
 
           <div>
             <h2 className="font-bold text-lg">TellMe AI</h2>
-            <p className="text-xs text-gray-500">Admin Dashboard</p>
+            <p className="text-xs text-muted-foreground">Admin Dashboard</p>
           </div>
         </Link>
       </div>
@@ -46,7 +46,6 @@ export default function DashboardSidebar() {
         <ul className="space-y-2">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
-
             const active = pathname.startsWith(item.path);
 
             return (
@@ -54,7 +53,7 @@ export default function DashboardSidebar() {
                 <Link
                   href={item.path}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                  ${active ? "bg-purple-500 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                  ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
                 >
                   <Icon className="w-5 h-5" />
                   {item.name}

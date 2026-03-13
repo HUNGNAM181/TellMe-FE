@@ -9,7 +9,7 @@ export interface UserDto {
   id: string;
   username: string;
   email?: string | null;
-  name?: string | null;
+  name?: string;
   isActive: boolean;
   lastLoginAt?: string | null;
   createdAt: string;

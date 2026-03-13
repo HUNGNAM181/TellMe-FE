@@ -102,9 +102,11 @@ export function RoleDialog({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-          <div className="space-y-2">
-            <Label htmlFor="role-name">Name</Label>
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <div className="space-y-3">
+            <Label htmlFor="role-name">
+              Name <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="role-name"
               placeholder="e.g. Administrator"
@@ -114,7 +116,7 @@ export function RoleDialog({
             {formErrors.name && <p className="text-xs text-red-500">{formErrors.name}</p>}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label htmlFor="role-description">Description</Label>
             <Input
               id="role-description"
@@ -140,7 +142,7 @@ export function RoleDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Permissions</Label>
               <p className="text-xs text-muted-foreground">Select one or more permissions for this role.</p>
@@ -162,9 +164,7 @@ export function RoleDialog({
                       <div className="flex flex-col">
                         <span className="font-medium text-sm">{permission.name}</span>
                         {permission.description && (
-                          <span className="text-xs text-muted-foreground line-clamp-2">
-                            {permission.description}
-                          </span>
+                          <span className="text-xs text-muted-foreground line-clamp-2">{permission.description}</span>
                         )}
                       </div>
                       <input

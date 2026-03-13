@@ -77,7 +77,7 @@ export default function ConversationsPage() {
           >
             <div className="flex items-start justify-between mb-4">
               <div
-                className={`w-10 h-10 rounded-md flex items-center justify-center text-white bg-gradient-to-br ${item.color}`}
+                className={`w-10 h-10 rounded-md flex items-center justify-center text-white bg-linear-to-br ${item.color}`}
               >
                 {item.icon}
               </div>

@@ -9,17 +9,15 @@ import { Label } from "@/components/ui/label";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AvatarUpload from "@/features/User/components/AvatarUpload";
+import { UserFormValues } from "@/types/userForm.type";
 
 import { createUserSchema, updateUserSchema } from "@/features/User/user.schema";
 
 import type { RoleBriefDto } from "@/types/role.type";
-import type { CreateUserPayload, UpdateUserPayload } from "@/types/user.types";
 
 import fileService from "@/services/upfile.service";
 
 export type UserDialogMode = "create" | "edit";
-
-type UserFormValues = Partial<CreateUserPayload & UpdateUserPayload>;
 
 interface UserDialogProps {
   open: boolean;
@@ -44,17 +42,23 @@ export function UserDialog({ open, mode, roles, initialValues, onOpenChange, onS
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   useEffect(() => {
     if (open) {
-      setFormValues(initialValues);
+      setFormValues({
+        isActive: true,
+        ...initialValues,
+      });
+
       setFormErrors({});
       setAvatarFile(null);
-
       setShowPassword(false);
       setShowConfirmPassword(false);
     }
   }, [open, initialValues]);
 
-  const handleChange = (field: keyof UserFormValues, value: any) => {
-    setFormValues((prev) => ({ ...prev, [field]: value }));
+  const handleChange = <K extends keyof UserFormValues>(field: K, value: UserFormValues[K]) => {
+    setFormValues((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -142,32 +146,44 @@ export function UserDialog({ open, mode, roles, initialValues, onOpenChange, onS
             <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div className="grid grid-cols-2 gap-4">
               {mode === "create" && (
-                <div className="space-y-2">
-                  <Label>Username</Label>
+                <div className="space-y-3">
+                  <Label>
+                    Username <span className="text-red-500">*</span>
+                  </Label>
                   <Input value={formValues.username || ""} onChange={(e) => handleChange("username", e.target.value)} />
                   {renderError("username")}
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label>Name</Label>
+              <div className="space-y-3">
+                <Label>
+                  Name <span className="text-red-500">*</span>
+                </Label>
                 <Input value={formValues.name || ""} onChange={(e) => handleChange("name", e.target.value)} />
                 {renderError("name")}
               </div>
 
-              <div className="space-y-2 col-span-2">
-                <Label>Email</Label>
-                <Input value={formValues.email || ""} onChange={(e) => handleChange("email", e.target.value)} />
+              <div className="space-y-3 col-span-2">
+                <Label>
+                  Email <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="email"
+                  value={formValues.email || ""}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                />
                 {renderError("email")}
               </div>
 
               {mode === "create" && (
                 <>
-                  <div className="space-y-2">
-                    <Label>Password</Label>
+                  <div className="space-y-3">
+                    <Label>
+                      Password <span className="text-red-500">*</span>
+                    </Label>
                     <div className="relative">
                       <Input
                         type={showPassword ? "text" : "password"}
@@ -186,8 +202,10 @@ export function UserDialog({ open, mode, roles, initialValues, onOpenChange, onS
                     {renderError("password")}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Confirm Password</Label>
+                  <div className="space-y-3">
+                    <Label>
+                      Confirm Password <span className="text-red-500">*</span>
+                    </Label>
                     <div className="relative">
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
@@ -208,8 +226,10 @@ export function UserDialog({ open, mode, roles, initialValues, onOpenChange, onS
                 </>
               )}
 
-              <div className="space-y-2 col-span-2">
-                <Label>Role</Label>
+              <div className="space-y-3 col-span-2">
+                <Label>
+                  Role <span className="text-red-500">*</span>
+                </Label>
 
                 <Select value={formValues.roleId || ""} onValueChange={(value) => handleChange("roleId", value)}>
                   <SelectTrigger className="w-full">
@@ -232,9 +252,7 @@ export function UserDialog({ open, mode, roles, initialValues, onOpenChange, onS
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Label>Avatar</Label>
-                <span className="text-xs text-muted-foreground">Optional</span>
               </div>
-
               <AvatarUpload
                 value={formValues.profileImageUrl}
                 apiUrl={process.env.NEXT_PUBLIC_API_URL}
@@ -243,7 +261,7 @@ export function UserDialog({ open, mode, roles, initialValues, onOpenChange, onS
                   setAvatarFile(file);
                   setFormValues((prev) => ({
                     ...prev,
-                    profileImageUrl: undefined,
+                    profileImageUrl: file ? undefined : null,
                   }));
                 }}
               />

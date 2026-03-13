@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 
@@ -20,8 +21,13 @@ export default function AvatarUpload({ value, onChange, apiUrl, onPreviewChange 
 
   const getAvatarUrl = (url?: string | null) => {
     if (!url) return null;
-    if (url.startsWith("http")) return url;
-    return `${apiUrl}${url}`;
+
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+
+    const base = apiUrl?.replace(/\/$/, "") || "";
+    return `${base}${url}`;
   };
 
   const avatarSrc = preview || getAvatarUrl(value) || null;
@@ -37,6 +43,11 @@ export default function AvatarUpload({ value, onChange, apiUrl, onPreviewChange 
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+
     setPreview(null);
     onChange(null);
 
@@ -78,33 +89,23 @@ export default function AvatarUpload({ value, onChange, apiUrl, onPreviewChange 
     <>
       <Input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} />
       {avatarSrc && (
-        <div className="relative w-fit mt-3">
-          <img
+        <div className="relative w-20 h-20 mt-3 overflow-hidden">
+          <Image
             src={avatarSrc}
             alt="avatar"
+            fill
+            unoptimized
             onClick={(e) => {
               e.stopPropagation();
               setPreviewOpen(true);
             }}
-            className="
-              w-20 h-20 rounded-xl object-cover 
-              border shadow-md 
-              cursor-pointer 
-              hover:opacity-80 
-              transition duration-200
-            "
+            className="object-cover rounded-xl border shadow-md cursor-pointer hover:opacity-80 transition duration-200"
           />
 
           <button
             type="button"
             onClick={handleRemove}
-            className="
-              absolute -top-2 -right-2
-              bg-black/80 hover:bg-black
-              text-white
-              rounded-full p-1.5
-              transition
-            "
+            className="absolute top-0.5 right-0.5 bg-black/80 hover:bg-black text-white rounded-full p-1 transition"
           >
             <X size={14} />
           </button>
@@ -116,12 +117,12 @@ export default function AvatarUpload({ value, onChange, apiUrl, onPreviewChange 
         typeof window !== "undefined" &&
         createPortal(
           <div
-            className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-sm flex items-center justify-center"
+            className="fixed inset-0 z-99999 bg-black/90 backdrop-blur-sm flex items-center justify-center"
             onClick={() => setPreviewOpen(false)}
           >
             <button
               type="button"
-              className="absolute top-6 right-6 w-12 h-12 z-[100001] flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition pointer-events-auto cursor-pointer"
+              className="absolute top-6 right-6 w-12 h-12 z-100001 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition pointer-events-auto cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 setPreviewOpen(false);
@@ -130,12 +131,9 @@ export default function AvatarUpload({ value, onChange, apiUrl, onPreviewChange 
               <X size={28} />
             </button>
 
-            <img
-              src={avatarSrc}
-              alt="preview"
-              className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl shadow-2xl pointer-events-auto"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="relative w-[90vw] h-[90vh]" onClick={(e) => e.stopPropagation()}>
+              <Image src={avatarSrc} alt="preview" fill unoptimized className="object-contain rounded-xl shadow-2xl" />
+            </div>
           </div>,
           document.body,
         )}

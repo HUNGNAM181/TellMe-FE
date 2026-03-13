@@ -112,7 +112,7 @@ export function useUsers(options?: UseUsersOptions) {
     setRolesState((prev) => ({ ...prev, loadingRoles: true }));
 
     try {
-      const res = await roleService.getRoles({ page: 1, limit: 200 });
+      const res = await roleService.getRoles({ page: 1, limit: 20 });
 
       if (!res.isSuccess) {
         throw new Error(res.errorMessage || "Failed to load roles");
